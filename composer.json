@@ -2,7 +2,7 @@
   "name": "comely-io/yaml",
   "description": "Parse or compile YAML files",
   "type": "library",
-  "homepage": "https://github.com/comely-io/utils",
+  "homepage": "https://github.com/comely-io/yaml",
   "license": "MIT",
   "authors": [
     {
