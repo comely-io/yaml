@@ -34,4 +34,13 @@ class Yaml
     {
         return new Parser($yamlFile);
     }
+
+    /**
+     * @param array $data
+     * @return Compiler
+     */
+    public static function Compile(array $data): Compiler
+    {
+        return new Compiler($data);
+    }
 }
