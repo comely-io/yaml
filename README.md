@@ -12,4 +12,4 @@
 
 ## Installation
 
-`composer require comelyio/yaml`
+`composer require comely-io/yaml`
