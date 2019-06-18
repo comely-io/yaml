@@ -101,7 +101,7 @@ class Buffer
                     continue;
                 }
 
-                $parsed[] = $subBuffer->parse();
+                $parsed[$subBuffer->key] = $subBuffer->parse();
                 unset($subBuffer);
             }
 
