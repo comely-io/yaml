@@ -146,8 +146,10 @@ class Parser
     {
         $buffer = new Buffer($this);
         $lines = file_get_contents($this->path);
-        if (!$lines) {
+        if ($lines === false) {
             throw new ParserException(sprintf('Failed to read YAML file "%s"', basename($this->path)));
+        } elseif (!$lines) {
+            throw new ParserException(sprintf('YAML file "%s" is blank', basename($this->path)));
         }
 
         try {

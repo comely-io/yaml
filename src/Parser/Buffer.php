@@ -78,10 +78,11 @@ class Buffer
     }
 
     /**
-     * @return array
+     * @return array|null
+     * @throws ParseLineException
      * @throws ParserException
      */
-    public function parse(): array
+    public function parse(): ?array
     {
         $parsed = [];
         /** @var null|Buffer $subBuffer */
