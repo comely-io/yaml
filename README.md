@@ -8,7 +8,7 @@
 
 
 * PHP >= 7.1
-* ext-pdo
+* ext-mbstring
 
 ## Installation
 
