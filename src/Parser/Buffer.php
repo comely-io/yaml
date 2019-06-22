@@ -244,16 +244,16 @@ class Buffer
                     return in_array($lowercaseValue, ["true", "on", "yes"]) ? true : false;
                 }
             }
-        }
 
-        // Integers
-        if (preg_match('/^\-?[0-9]+$/', $value)) {
-            return intval($value);
-        }
+            // Integers
+            if (preg_match('/^\-?[0-9]+$/', $value)) {
+                return intval($value);
+            }
 
-        // Floats
-        if (preg_match('/^\-?[0-9]+\.[0-9]+$/', $value)) {
-            return floatval($value);
+            // Floats
+            if (preg_match('/^\-?[0-9]+\.[0-9]+$/', $value)) {
+                return floatval($value);
+            }
         }
 
         return $value;
