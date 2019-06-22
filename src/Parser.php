@@ -50,10 +50,10 @@ class Parser
     {
         $realPath = realpath($yamlFile);
         if (!$realPath) {
-            throw new ParserException('YAML file does not exist');
+            throw new ParserException(sprintf('YAML file "%s" does not exist', basename($yamlFile)));
         }
 
-        if (!preg_match('/[\w\_\-]+\.(yaml|yml)/', $realPath)) {
+        if (!preg_match('/[\w\_\-]+\.(yaml|yml)$/', $realPath)) {
             throw new ParserException('Given path is not a YAML file');
         }
 
