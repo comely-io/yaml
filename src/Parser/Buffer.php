@@ -90,7 +90,7 @@ class Buffer
 
         /** @var Line $line */
         foreach ($this->lines as $line) {
-            if ($subBuffer) {
+            if (isset($subBuffer)) {
                 if (!$line->key && !$line->value) {
                     $subBuffer->append($line);
                     continue;
