@@ -157,7 +157,7 @@ class Buffer
                         } catch (ParserException $e) {
                             throw new ParserException(
                                 sprintf(
-                                    '%s imported in "%s" on line %d',
+                                    '%s, imported in "%s" on line %d',
                                     $e->getMessage(),
                                     basename($this->parser->path),
                                     $line->num
