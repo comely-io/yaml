@@ -7,7 +7,7 @@
 ## Prerequisites
 
 
-* PHP >= 7.1
+* PHP >= 8.0
 * ext-mbstring
 
 ## Installation
