@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/yaml" package.
  * https://github.com/comely-io/yaml
  *
@@ -22,48 +22,40 @@ use Comely\Yaml\Exception\CompilerException;
  */
 class Compiler
 {
-    /** @var array */
-    private $data;
     /** @var int */
-    private $indent;
+    private int $indent = 2;
     /** @var string */
-    private $eol;
+    private string $eolChar = PHP_EOL;
 
     /**
      * Compiler constructor.
      * @param array $data
      */
-    public function __construct(array $data)
+    public function __construct(private array $data)
     {
-        $this->data = $data;
-        $this->indent = 2;
-        $this->eol = PHP_EOL;
     }
 
     /**
-     * @param string $eol
-     * @return Compiler
-     * @throws CompilerException
+     * @param int|null $indents
+     * @param string|null $eolChar
+     * @return $this
      */
-    public function eol(string $eol): self
+    public function options(?int $indents = null, ?string $eolChar = null): self
     {
-        if (!in_array($eol, ["", "\n", "\r\n"])) {
-            throw new CompilerException('Invalid EOL character');
+        if (is_int($indents)) {
+            if ($indents < 2 || $indents > 8) {
+                throw new \OutOfRangeException('Invalid indents value');
+            }
+
+            $this->indent = $indents;
         }
 
-        $this->eol = $eol;
-        return $this;
-    }
+        if (is_string($eolChar)) {
+            if (!in_array($eolChar, ["\n", "\r\n"])) {
+                throw new \InvalidArgumentException('Invalid EOL character');
+            }
 
-    /**
-     * @param int $indent
-     * @return Compiler
-     * @throws CompilerException
-     */
-    public function indents(int $indent = 2): self
-    {
-        if ($indent < 2 || $indent > 8) {
-            throw new CompilerException(sprintf('"%d" is an invalid indent value', $indent));
+            $this->eolChar = $eolChar;
         }
 
         return $this;
@@ -79,9 +71,7 @@ class Compiler
         $headers[] = "# https://github.com/comely-io/yaml";
 
         $compiled = $this->compile($this->data);
-        $compiled = implode($this->eol, $headers) . str_repeat($this->eol, 2) . $compiled;
-
-        return $compiled;
+        return implode($this->eolChar, $headers) . str_repeat($this->eolChar, 2) . $compiled;
     }
 
     /**
@@ -111,7 +101,7 @@ class Compiler
                 // Value is scalar or NULL
                 if ($lastValueType !== 1) {
                     // A blank line is last value type was not scalar
-                    $compiled .= $this->eol;
+                    $compiled .= $this->eolChar;
                 }
 
                 // Current value type
@@ -141,25 +131,25 @@ class Compiler
                         break;
                     default:
                         // Definitely a string
-                        if (strpos($value, $this->eol)) {
+                        if (strpos($value, $this->eolChar)) {
                             // String has line-breaks
-                            $compiled .= "|" . $this->eol;
-                            $lines = explode($this->eol, $value);
+                            $compiled .= "|" . $this->eolChar;
+                            $lines = explode($this->eolChar, $value);
                             $subIndent = $this->indent(($indent + $this->indent));
 
                             foreach ($lines as $line) {
                                 $compiled .= $subIndent;
-                                $compiled .= $line . $this->eol;
+                                $compiled .= $line . $this->eolChar;
                             }
                         } elseif (strlen($value) > 75) {
                             // Long string
-                            $compiled .= ">" . $this->eol;
-                            $lines = explode($this->eol, wordwrap($value, 75, $this->eol));
+                            $compiled .= ">" . $this->eolChar;
+                            $lines = explode($this->eolChar, wordwrap($value, 75, $this->eolChar));
                             $subIndent = $this->indent(($indent + $this->indent));
 
                             foreach ($lines as $line) {
                                 $compiled .= $subIndent;
-                                $compiled .= $line . $this->eol;
+                                $compiled .= $line . $this->eolChar;
                             }
                         } else {
                             // Simple string
@@ -167,7 +157,7 @@ class Compiler
                         }
                 }
 
-                $compiled .= $this->eol;
+                $compiled .= $this->eolChar;
             } else {
 
                 // Current value type
@@ -181,7 +171,7 @@ class Compiler
                 // Whether value was Array, or is now Array after conversion from object
                 if (is_array($value)) {
                     $compiled .= $this->indent($indent);
-                    $compiled .= sprintf('%s:%s', $key, $this->eol);
+                    $compiled .= sprintf('%s:%s', $key, $this->eolChar);
                     $compiled .= $this->compile($value, strval($key), $tier + 1);
                 }
             }
@@ -191,7 +181,7 @@ class Compiler
             throw new CompilerException(sprintf('Failed to compile YAML for key "%s"', $parent));
         }
 
-        $compiled .= $this->eol;
+        $compiled .= $this->eolChar;
 
         return $compiled;
     }

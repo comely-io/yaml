@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/yaml" package.
  * https://github.com/comely-io/yaml
  *
@@ -24,7 +24,7 @@ use Throwable;
 class ParseLineException extends ParserException
 {
     /** @var Line */
-    private $line;
+    private Line $_line;
 
     /**
      * ParseLineException constructor.
@@ -35,7 +35,7 @@ class ParseLineException extends ParserException
      */
     public function __construct(Line $line, string $message = "", int $code = 0, Throwable $previous = null)
     {
-        $this->line = $line;
+        $this->_line = $line;
         parent::__construct($message, $code, $previous);
     }
 
@@ -44,6 +44,6 @@ class ParseLineException extends ParserException
      */
     public function line(): Line
     {
-        return $this->line;
+        return $this->_line;
     }
 }

@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/yaml" package.
  * https://github.com/comely-io/yaml
  *
@@ -25,16 +25,14 @@ use Comely\Yaml\Yaml;
  */
 class Buffer
 {
-    /** @var Parser */
-    public $parser;
     /** @var int */
-    public $indent;
+    public int $indent;
     /** @var null|string */
-    public $key;
+    public ?string $key = null;
     /** @var null|string */
-    public $type;
+    public ?string $type = null;
     /** @var array */
-    public $lines;
+    public array $lines = [];
 
     /**
      * Buffer constructor.
@@ -43,17 +41,15 @@ class Buffer
      * @param string|null $key
      * @param string|null $type
      */
-    public function __construct(Parser $parser, int $indent = 0, ?string $key = null, ?string $type = null)
+    public function __construct(private Parser $parser, int $indent = 0, ?string $key = null, ?string $type = null)
     {
         if ($type && !in_array($type, [">", "|"])) {
             throw new \InvalidArgumentException('Invalid buffer type');
         }
 
-        $this->parser = $parser;
         $this->indent = $indent;
         $this->key = $key;
         $this->type = $type;
-        $this->lines = [];
     }
 
     /**
@@ -146,20 +142,23 @@ class Buffer
                             throw new ParseLineException($line, 'Variable "imports" must be sequence of Yaml files');
                         }
 
-                        $importPath = dirname($this->parser->path) . DIRECTORY_SEPARATOR . trim($value, DIRECTORY_SEPARATOR);
+                        $importPath = dirname($this->parser->filePath()) . DIRECTORY_SEPARATOR . trim($value, DIRECTORY_SEPARATOR);
 
                         try {
                             $parser = Yaml::Parse($importPath)
-                                ->eol($this->parser->eol)
-                                ->evalNulls($this->parser->evalNulls)
-                                ->evalBooleans($this->parser->evalBooleans);
+                                ->options(
+                                    $this->parser->eolChar(),
+                                    $this->parser->evaluateBooleans(),
+                                    $this->parser->evaluateNulls(),
+                                    $this->parser->mbEncoding()
+                                );
                             $value = $parser->generate(); // returns array
                         } catch (ParserException $e) {
                             throw new ParserException(
                                 sprintf(
                                     '%s, imported in "%s" on line %d',
                                     $e->getMessage(),
-                                    basename($this->parser->path),
+                                    basename($this->parser->filePath()),
                                     $line->num
                                 )
                             );
@@ -184,14 +183,14 @@ class Buffer
 
         // Long string buffers
         if (is_array($parsed) && in_array($this->type, [">", "|"])) {
-            $glue = $this->type === ">" ? " " : $this->parser->eol;
+            $glue = $this->type === ">" ? " " : $this->parser->eolChar();
             $parsed = implode($glue, $parsed);
         }
 
         // Result cannot be empty if no-parent
         if (!$parsed && !$this->key) {
             throw new ParserException(
-                sprintf('Corrupt YAML file format or line endings in "%s"', basename($this->parser->path))
+                sprintf('Corrupt YAML file format or line endings in "%s"', basename($this->parser->filePath()))
             );
         }
 
@@ -211,7 +210,7 @@ class Buffer
      * @return bool|float|int|string|null
      * @throws ParseLineException
      */
-    private function getLineValue(Line $line)
+    private function getLineValue(Line $line): int|float|string|bool|null
     {
         if (!$line->value) {
             return null;
@@ -234,24 +233,24 @@ class Buffer
         if (!$isQuoted) {
             $lowercaseValue = strtolower($value);
             // Null Types
-            if ($this->parser->evalNulls && in_array($lowercaseValue, ["~", "null"])) {
+            if ($this->parser->evaluateNulls() && in_array($lowercaseValue, ["~", "null"])) {
                 return null;
             }
 
             // Evaluate Booleans?
-            if ($this->parser->evalBooleans) {
+            if ($this->parser->evaluateBooleans()) {
                 if (in_array($lowercaseValue, ["true", "false", "on", "off", "yes", "no"])) {
-                    return in_array($lowercaseValue, ["true", "on", "yes"]) ? true : false;
+                    return in_array($lowercaseValue, ["true", "on", "yes"]);
                 }
             }
 
             // Integers
-            if (preg_match('/^\-?[0-9]+$/', $value)) {
+            if (preg_match('/^(0|-?[1-9][0-9]*)$/', $value)) {
                 return intval($value);
             }
 
             // Floats
-            if (preg_match('/^\-?[0-9]+\.[0-9]+$/', $value)) {
+            if (preg_match('/^(-?0\.[0-9]+|-?[1-9][0-9]*\.[0-9]+)$/', $value)) {
                 return floatval($value);
             }
         }

@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/yaml" package.
  * https://github.com/comely-io/yaml
  *
@@ -24,17 +24,17 @@ use Comely\Yaml\Parser;
 class Line
 {
     /** @var string */
-    public $raw;
+    public string $raw;
     /** @var int */
-    public $num;
+    public int $num;
     /** @var int */
-    public $len;
+    public int $len;
     /** @var int */
-    public $indent;
+    public int $indent;
     /** @var string|null */
-    public $key;
+    public ?string $key = null;
     /** @var string|null */
-    public $value;
+    public ?string $value = null;
 
     /**
      * Line constructor.
@@ -52,21 +52,22 @@ class Line
             throw new ParseLineException($this, 'Line cannot be intended by a tab character');
         }
 
-        $this->len = $parser->encoding ? mb_strlen($this->raw, $parser->encoding) : strlen($this->raw);
-        $trimmedLen = $parser->encoding ? mb_strlen(ltrim($this->raw), $parser->encoding) : strlen(ltrim($this->raw));
+        $mbEncoding = $parser->mbEncoding();
+        $this->len = $mbEncoding ? mb_strlen($this->raw, $mbEncoding) : strlen($this->raw);
+        $trimmedLen = $mbEncoding ? mb_strlen(ltrim($this->raw), $mbEncoding) : strlen(ltrim($this->raw));
         $this->indent = $this->len - $trimmedLen;
 
         if (!$this->raw || preg_match('/^\s*$/', $this->raw)) {
             return; // Blank line
-        } elseif (preg_match('/^\s*\#/', $this->raw)) {
+        } elseif (preg_match('/^\s*#/', $this->raw)) {
             return; // Full line comment
         }
 
         // Clear any inline comment
-        $line = trim(preg_split("/(#)(?=(?:[^\"\']|[\"\'][^\"\']*[\"\'])*$)/", $line, 2)[0]);
+        $line = trim(preg_split("/(#)(?=(?:[^\"']|[\"'][^\"']*[\"'])*$)/", $line, 2)[0]);
 
         // Check if line has a key
-        if (preg_match('/^\s*[\w\-\.]+\:/', $line)) {
+        if (preg_match('/^\s*[\w\-.]+:/', $line)) {
             // Key exists, split into key/value pair
             $line = preg_split("/:/", $line, 2);
             $this->key = trim($line[0]);

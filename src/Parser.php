@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/yaml" package.
  * https://github.com/comely-io/yaml
  *
@@ -22,24 +22,19 @@ use Comely\Yaml\Parser\Line;
 /**
  * Class Parser
  * @package Comely\Yaml
- * @property-read string $path
- * @property-read null|string $encoding
- * @property-read string $eol
- * @property-read bool $evalBooleans
- * @property-read bool $evalNulls
  */
 class Parser
 {
     /** @var string */
-    private $path;
-    /** @var null|string */
-    private $encoding;
+    private string $path;
     /** @var string */
-    private $eol;
+    private string $eol = PHP_EOL;
     /** @var bool */
-    private $evalBooleans;
+    private bool $evalBooleans = true;
     /** @var bool */
-    private $evalNulls;
+    private bool $evalNulls = true;
+    /** @var null|string */
+    private ?string $mbEncoding = null;
 
     /**
      * Parser constructor.
@@ -53,7 +48,7 @@ class Parser
             throw new ParserException(sprintf('YAML file "%s" does not exist', basename($yamlFile)));
         }
 
-        if (!preg_match('/[\w\_\-]+\.(yaml|yml)$/', $realPath)) {
+        if (!preg_match('/[\w\-]+\.(yaml|yml)$/', $realPath)) {
             throw new ParserException('Given path is not a YAML file');
         }
 
@@ -64,78 +59,82 @@ class Parser
         }
 
         $this->path = $realPath;
-        $this->eol = PHP_EOL;
-        $this->evalBooleans = true;
-        $this->evalNulls = true;
     }
 
     /**
-     * @param string $prop
-     * @return mixed
+     * @param string|null $eolChar
+     * @param bool|null $evaluateBooleans
+     * @param bool|null $evaluateNulls
+     * @param string|null $mbEncoding
+     * @return $this
      */
-    public function __get(string $prop)
+    public function options(?string $eolChar = null, ?bool $evaluateBooleans = null, ?bool $evaluateNulls = null, ?string $mbEncoding = null): self
     {
-        switch ($prop) {
-            case "path":
-            case "encoding":
-            case "eol":
-            case "evalBooleans":
-            case "evalNulls":
-                return $this->$prop;
+        if (is_string($eolChar)) {
+            if (!in_array($eolChar, ["\n", "\r\n"])) {
+                throw new \InvalidArgumentException('Invalid EOL character');
+            }
+
+            $this->eol = $eolChar;
         }
 
-        throw new \DomainException('Cannot get value of inaccessible property');
-    }
-
-    /**
-     * @param string $eol
-     * @return Parser
-     * @throws ParserException
-     */
-    public function eol(string $eol): self
-    {
-        if (!in_array($eol, ["", "\n", "\r\n"])) {
-            throw new ParserException('Invalid EOL character');
+        if (is_bool($evaluateBooleans)) {
+            $this->evalBooleans = $evaluateBooleans;
         }
 
-        $this->eol = $eol;
-        return $this;
-    }
-
-    /**
-     * Converts unquoted values (true/false, on/off, yes/no) to booleans
-     * @param bool $trigger
-     * @return Parser
-     */
-    public function evalBooleans(bool $trigger): self
-    {
-        $this->evalBooleans = $trigger;
-        return $this;
-    }
-
-    /**
-     * Converts unquoted values like NULL/null or ~ (tilde) to NULLs
-     * @param bool $trigger
-     * @return Parser
-     */
-    public function evalNulls(bool $trigger): self
-    {
-        $this->evalNulls = $trigger;
-        return $this;
-    }
-
-    /**
-     * @param string $mbEncoding
-     * @return Parser
-     */
-    public function encoding(string $mbEncoding): self
-    {
-        if (!in_array($mbEncoding, mb_list_encodings())) {
-            throw new \OutOfBoundsException('Not a valid multi-byte encoding');
+        if (is_bool($evaluateNulls)) {
+            $this->evalNulls = $evaluateNulls;
         }
 
-        $this->encoding = $mbEncoding;
+        if (is_string($mbEncoding)) {
+            if (!in_array($mbEncoding, mb_list_encodings())) {
+                throw new \OutOfBoundsException('Not a valid multi-byte encoding');
+            }
+
+            $this->mbEncoding = $mbEncoding;
+        }
+
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function filePath(): string
+    {
+        return $this->path;
+    }
+
+    /**
+     * @return string
+     */
+    public function eolChar(): string
+    {
+        return $this->eol;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function mbEncoding(): ?string
+    {
+        return $this->mbEncoding;
+    }
+
+    /**
+     * @return bool
+     */
+    public function evaluateNulls(): bool
+    {
+        return $this->evalNulls;
+    }
+
+    /**
+     * @return bool
+     */
+    public function evaluateBooleans(): bool
+    {
+        return $this->evalBooleans;
     }
 
     /**
